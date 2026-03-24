@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Скайрим | Врата Девяти Ликов</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            min-height: 100vh;
+            background: radial-gradient(ellipse at 30% 40%, #0f0e0a 0%, #020100 100%);
+            font-family: 'Cinema', 'Courier New', 'Georgia', monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+        }
+        
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" opacity="0.08"><path d="M70,30 L90,20 L110,30 L115,55 L100,75 L80,75 L65,55 Z" fill="none" stroke="%238b6942" stroke-width="1"/><circle cx="90" cy="50" r="8" stroke="%238b6942" fill="none"/><path d="M40,120 L60,110 L80,120 L85,145 L70,165 L50,165 L35,145 Z" fill="none" stroke="%238b6942"/><path d="M130,130 L150,120 L170,130 L175,155 L160,175 L140,175 L125,155 Z" fill="none" stroke="%238b6942"/></svg>');
+            background-repeat: repeat;
+            pointer-events: none;
+        }
+
+        .grimoire {
+            max-width: 850px;
+            width: 100%;
+            background: rgba(8, 6, 4, 0.92);
+            backdrop-filter: blur(3px);
+            border: 1px solid #5e4a32;
+            border-radius: 56px;
+            padding: 22px 22px 35px;
+            box-shadow: 0 25px 45px rgba(0,0,0,0.7), inset 0 1px 0 rgba(210,170,100,0.15);
+            position: relative;
+            z-index: 2;
+        }
+
+        .title {
+            text-align: center;
+            margin-bottom: 28px;
+            border-bottom: 2px solid #7a623a;
+            padding-bottom: 15px;
+        }
+        .title h1 {
+            font-size: 1.9rem;
+            letter-spacing: 6px;
+            color: #e2cf94;
+            text-shadow: 0 0 8px #2a1a08, 0 2px 4px black;
+            font-weight: normal;
+            font-family: 'Georgia', serif;
+        }
+        .title p {
+            font-size: 0.75rem;
+            color: #ad8e5c;
+            margin-top: 8px;
+            font-style: italic;
+        }
+
+        .sigil-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .sigil {
+            aspect-ratio: 1 / 1;
+            background: #13100b;
+            border: 2px solid #5c482c;
+            border-radius: 28px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,200,100,0.08);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .sigil::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 30% 20%, rgba(180,130,60,0.08), transparent);
+            pointer-events: none;
+        }
+
+        .sigil:hover {
+            transform: translateY(-3px);
+            border-color: #c99f5a;
+            box-shadow: 0 0 20px rgba(200,150,70,0.3);
+            background: #1f1a12;
+        }
+
+        .sigil svg {
+            width: 52%;
+            height: 52%;
+            stroke: #ecd5a0;
+            stroke-width: 1.3;
+            fill: none;
+            filter: drop-shadow(0 0 3px #7a5a34);
+        }
+
+        .sigil .sigil-label {
+            margin-top: 10px;
+            font-size: 0.7rem;
+            letter-spacing: 2px;
+            color: #c9aa6a;
+            font-weight: bold;
+            text-transform: uppercase;
+            background: rgba(0,0,0,0.6);
+            padding: 3px 10px;
+            border-radius: 40px;
+            font-family: monospace;
+        }
+
+        .sigil:active {
+            transform: scale(0.96);
+            background: #2c231a;
+            border-color: #e0b06a;
+        }
+
+        .sigil.disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+            filter: grayscale(0.4);
+            pointer-events: none;
+            transform: none;
+        }
+
+        .ritual-panel {
+            background: #0b0906cc;
+            border-radius: 48px;
+            padding: 18px 22px;
+            margin-top: 12px;
+            border: 1px solid #5a462e;
+            backdrop-filter: blur(2px);
+        }
+
+        .sequence-box {
+            background: #030201;
+            border-radius: 44px;
+            padding: 14px 18px;
+            margin-bottom: 18px;
+            border-left: 5px solid #b88744;
+        }
+        .sequence-box p {
+            color: #c9af7a;
+            font-size: 0.7rem;
+            letter-spacing: 3px;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+        #seqDisplay {
+            font-family: monospace;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #f7e5b3;
+            word-break: break-all;
+            line-height: 1.5;
+        }
+
+        #statusMessage {
+            color: #cfbc8a;
+            font-size: 0.95rem;
+            padding: 10px 0;
+            text-align: center;
+            font-style: italic;
+            min-height: 95px;
+        }
+
+        .reset-btn {
+            background: #221f18;
+            border: 1px solid #7b613e;
+            color: #e6cf91;
+            padding: 10px 20px;
+            font-size: 0.9rem;
+            width: 100%;
+            border-radius: 60px;
+            cursor: pointer;
+            font-family: monospace;
+            font-weight: bold;
+            transition: 0.2s;
+            margin-top: 5px;
+        }
+        .reset-btn:hover {
+            background: #3e2f1f;
+            border-color: #cb9e58;
+            color: #fff0c0;
+        }
+
+        .trap-panel {
+            background: #2a1c12dd;
+            border: 1px solid #bc784a;
+            border-radius: 36px;
+            padding: 18px;
+            margin-top: 18px;
+            text-align: center;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+        }
+        .dice-btn {
+            background: #4f351d;
+            border: 1px solid #e6b068;
+            color: #ffebbb;
+            padding: 12px 28px;
+            font-size: 1.2rem;
+            border-radius: 60px;
+            cursor: pointer;
+            margin: 12px 0;
+            font-weight: bold;
+            transition: 0.1s;
+        }
+        .dice-btn:active {
+            transform: scale(0.96);
+        }
+        
+        .victory-message {
+            background: #1a2a1aaa;
+            border: 1px solid #c6a25c;
+            border-radius: 44px;
+            padding: 16px;
+            margin-top: 18px;
+            text-align: center;
+        }
+        
+        .wound-list {
+            background: #130f0acc;
+            border-radius: 32px;
+            padding: 12px 16px;
+            margin-top: 15px;
+            font-size: 0.75rem;
+            max-height: 130px;
+            overflow-y: auto;
+            text-align: left;
+            border-left: 3px solid #b77a48;
+        }
+        .wound-list span {
+            color: #e6aa6a;
+            font-weight: bold;
+        }
+        .wound-item {
+            color: #dbba88;
+            margin: 5px 0;
+            font-size: 0.7rem;
+            padding-left: 8px;
+        }
+        footer {
+            text-align: center;
+            font-size: 0.6rem;
+            color: #6e5a3e;
+            margin-top: 20px;
+        }
+        .danger-text {
+            color: #e6985a;
+        }
+        .wound-header {
+            font-size: 0.7rem;
+            color: #cbac78;
+            margin-bottom: 6px;
+            text-align: center;
+            letter-spacing: 1px;
+        }
+    </style>
+</head>
+<body>
+<div class="grimoire">
+    <div class="title">
+        <h1>◈ ВРАТА ДЕВЯТИ ЛИКОВ ◈</h1>
+        <p>«Древний порядок не прощает ошибок — лишь кровью и шрамами открывается путь»</p>
+    </div>
+
+    <div class="sigil-grid" id="sigilGrid"></div>
+
+    <div class="ritual-panel">
+        <div class="sequence-box">
+            <p>⚡ ПОСЛЕДОВАТЕЛЬНОСТЬ ЛИКОВ ⚡</p>
+            <div id="seqDisplay">—</div>
+        </div>
+        <div id="statusMessage">❖ Врата замерли. Коснись девяти ликов в древнем порядке, что хранят драконьи руны.</div>
+        <button class="reset-btn" id="resetBtn">⟳ ОЧИСТИТЬ ПРОГРЕСС (СБРОС)</button>
+        <div id="dynamicZone"></div>
+        <div id="woundZone" class="wound-list" style="display: none;">
+            <div class="wound-header">🏺 ШРАМЫ И РАНЫ 🏺</div>
+            <div id="woundList"></div>
+        </div>
+    </div>
+    <footer>Символы древних нордов | Скайрим</footer>
+</div>
+
+<script>
+    // ===================== НОВЫЕ СИМВОЛЫ (СКАЙРИМСКАЯ АТМОСФЕРА) =====================
+    // Волк, Медведь, Орёл, Дракон, Мотылёк (вместо меча), Кит (вместо розы), Сова, Олень, Луна
+    const symbols = [
+        { id: "wolf", name: "ВОЛК", label: "Волк", svg: `<svg viewBox="0 0 100 100"><path d="M30,55 L18,38 L34,32 L45,42 L55,42 L66,32 L82,38 L70,55 L64,72 L52,78 L48,78 L36,72 L30,55Z" stroke="#ecd5a0" fill="none" stroke-width="1.5"/><circle cx="38" cy="52" r="3.2" stroke="#ecd5a0" fill="none"/><circle cx="62" cy="52" r="3.2" stroke="#ecd5a0" fill="none"/><path d="M44,68 Q50,75 56,68" stroke="#ecd5a0" fill="none"/><path d="M22,44 L12,38 M78,44 L88,38" stroke="#ecd5a0"/></svg>` },
+        { id: "bear", name: "МЕДВЕДЬ", label: "Медведь", svg: `<svg viewBox="0 0 100 100"><ellipse cx="50" cy="60" rx="26" ry="28" stroke="#ecd5a0" fill="none"/><circle cx="36" cy="50" r="4" stroke="#ecd5a0"/><circle cx="64" cy="50" r="4" stroke="#ecd5a0"/><path d="M42,68 Q50,76 58,68" stroke="#ecd5a0"/><path d="M26,44 L15,36 M74,44 L85,36" stroke="#ecd5a0"/><path d="M44,44 L47,38 M56,44 L53,38" stroke="#ecd5a0"/></svg>` },
+        { id: "eagle", name: "ОРЁЛ", label: "Орёл", svg: `<svg viewBox="0 0 100 100"><path d="M50,16 L64,40 L78,46 L64,58 L70,84 L50,70 L30,84 L36,58 L22,46 L36,40 L50,16Z" stroke="#ecd5a0" fill="none"/><circle cx="42" cy="50" r="2.8" stroke="#ecd5a0"/><circle cx="58" cy="50" r="2.8" stroke="#ecd5a0"/><path d="M46,62 Q50,68 54,62" stroke="#ecd5a0"/></svg>` },
+        { id: "dragon", name: "ДРАКОН", label: "Дракон", svg: `<svg viewBox="0 0 100 100"><path d="M50,28 L68,34 L76,48 L68,64 L50,72 L32,64 L24,48 L32,34 L50,28Z" stroke="#ecd5a0" fill="none"/><path d="M50,28 L50,16 M68,34 L78,22 M32,34 L22,22 M76,48 L88,44 M24,48 L12,44 M68,64 L78,74 M32,64 L22,74" stroke="#ecd5a0"/><circle cx="40" cy="51" r="2.5" stroke="#ecd5a0"/><circle cx="60" cy="51" r="2.5" stroke="#ecd5a0"/><path d="M44,64 Q50,70 56,64" stroke="#ecd5a0"/></svg>` },
+        { id: "moth", name: "МОТЫЛЁК", label: "Мотылёк", svg: `<svg viewBox="0 0 100 100"><path d="M50,38 L66,44 L76,54 L66,64 L50,70 L34,64 L24,54 L34,44 L50,38Z" stroke="#ecd5a0" fill="none"/><path d="M50,38 L50,28 M76,54 L86,52 M24,54 L14,52" stroke="#ecd5a0"/><circle cx="43" cy="54" r="2.2" stroke="#ecd5a0"/><circle cx="57" cy="54" r="2.2" stroke="#ecd5a0"/><path d="M46,60 Q50,64 54,60" stroke="#ecd5a0"/><path d="M32,46 L24,42 M68,46 L76,42" stroke="#ecd5a0"/></svg>` },
+        { id: "whale", name: "КИТ", label: "Кит", svg: `<svg viewBox="0 0 100 100"><path d="M30,58 L44,44 L62,44 L76,58 L68,72 L48,78 L28,72 L30,58Z" stroke="#ecd5a0" fill="none"/><circle cx="48" cy="60" r="3" stroke="#ecd5a0"/><path d="M64,54 L74,52 M22,58 L12,56" stroke="#ecd5a0"/><path d="M54,68 Q62,66 64,62" stroke="#ecd5a0"/><path d="M42,52 L38,48 M58,52 L62,48" stroke="#ecd5a0"/></svg>` },
+        { id: "owl", name: "СОВА", label: "Сова", svg: `<svg viewBox="0 0 100 100"><ellipse cx="50" cy="55" rx="24" ry="26" stroke="#ecd5a0" fill="none"/><circle cx="38" cy="50" r="3.5" stroke="#ecd5a0"/><circle cx="62" cy="50" r="3.5" stroke="#ecd5a0"/><path d="M44,66 Q50,73 56,66" stroke="#ecd5a0"/><path d="M28,44 L18,40 M72,44 L82,40" stroke="#ecd5a0"/><path d="M46,44 L48,38 M54,44 L52,38" stroke="#ecd5a0"/></svg>` },
+        { id: "deer", name: "ОЛЕНЬ", label: "Олень", svg: `<svg viewBox="0 0 100 100"><path d="M50,72 L38,52 L50,38 L62,52 L50,72Z" stroke="#ecd5a0" fill="none"/><path d="M50,38 L50,28 M45,32 L50,28 L55,32" stroke="#ecd5a0"/><path d="M28,52 L20,48 M72,52 L80,48" stroke="#ecd5a0"/><path d="M44,56 L50,62 L56,56" stroke="#ecd5a0"/></svg>` },
+        { id: "moon", name: "ЛУНА", label: "Луна", svg: `<svg viewBox="0 0 100 100"><path d="M66,32 A32,32 0 1,1 44,32 A22,24 0 1,0 66,32Z" stroke="#ecd5a0" fill="none"/><circle cx="38" cy="56" r="2.8" stroke="#ecd5a0"/><path d="M72,44 L80,40" stroke="#ecd5a0"/></svg>` }
+    ];
+
+    // ===================== НОВАЯ ПОСЛЕДОВАТЕЛЬНОСТЬ (ВРАЗНОБОЙ, СЛОЖНАЯ) =====================
+    // Волк → Кит → Мотылёк → Дракон → Орёл → Медведь → Сова → Луна → Олень
+    const correctSequence = [
+        "wolf",    // 1. Волк
+        "whale",   // 2. Кит
+        "moth",    // 3. Мотылёк
+        "dragon",  // 4. Дракон
+        "eagle",   // 5. Орёл
+        "bear",    // 6. Медведь
+        "owl",     // 7. Сова
+        "moon",    // 8. Луна
+        "deer"     // 9. Олень
+    ];
+
+    // ===================== РАНЕНИЯ (25 ВАРИАНТОВ) =====================
+    const wounds = [
+        "🏹 Колотая рана плеча", "⚔️ Резаная рана предплечья", "🐺 Рваная рана голени",
+        "💥 Ушиб ребер с трещиной", "🩸 Рассечение брови", "🦴 Перелом ребер",
+        "🔥 Ожог лица", "⚡ Электрический ожог с судорогами", "❄️ Обморожение пальцев",
+        "🗡️ Колотая рана бедра", "🏹 Сквозное ранение икры", "🐾 Глубокая царапина спины",
+        "✂️ Отрубленный палец", "🦾 Вывих плеча", "🧠 Сотрясение мозга",
+        "🗡️ Рваная рана бока", "⚔️ Проникающее ранение живота", "🦶 Раздробленная стопа",
+        "🔪 Порез шеи (неглубокий)", "🦴 Перелом ключицы", "🩸 Отрыв фаланги пальца",
+        "🫀 Гематома внутренних органов", "😖 Сквозное ранение щеки", "🖐️ Разрыв сухожилия на руке",
+        "☠️ Колотая рана под доспехом (отравленное)"
+    ];
+
+    // ===================== ЛОВУШКИ =====================
+    const traps = [
+        { name: "СТРЕЛОМЁТЫ", description: "Стрелы вылетают из стен! Брось d20. Порог 12: увернулся. Меньше — ранение.", threshold: 12, successText: "Ты уворачиваешься.", failText: "Стрела вонзается." },
+        { name: "ОГНЕННАЯ РУНА", description: "Пол вспыхивает! Брось d20. Порог 11: отпрыгнул. Меньше — ожог.", threshold: 11, successText: "Ты отпрыгиваешь.", failText: "Пламя охватывает тело." },
+        { name: "ЛЕДЯНОЙ КЛИНОК", description: "Ледяное копьё летит! Брось d20. Порог 13: пригнулся. Меньше — ранение.", threshold: 13, successText: "Лезвие проходит мимо.", failText: "Лёд вонзается." },
+        { name: "ПАДАЮЩИЙ СВОД", description: "Камни падают! Брось d20. Порог 14: откатился. Меньше — удар.", threshold: 14, successText: "Камень падает рядом.", failText: "Валун придавливает." },
+        { name: "ОТРАВЛЕННЫЙ ГАЗ", description: "Ядовитый туман! Брось d20. Порог 10: задержал дыхание. Меньше — отравление.", threshold: 10, successText: "Ты выбегаешь.", failText: "Газ обжигает лёгкие." },
+        { name: "МАЯТНИК С ЛЕЗВИЯМИ", description: "Огромное лезвие! Брось d20. Порог 15: проскочил. Меньше — порез.", threshold: 15, successText: "Ты проскальзываешь.", failText: "Клинок рассекает." },
+        { name: "ЗЕМЛЕТРЯСЕНИЕ", description: "Пол трескается! Брось d20. Порог 12: удержался. Меньше — травма.", threshold: 12, successText: "Ты хватаешься за край.", failText: "Падение ломает кости." }
+    ];
+
+    let currentStep = 0;
+    let pressedIds = [];
+    let mistakeCounter = 0;
+    let gameFinished = false;
+    let trapActive = false;
+    let waitingForDice = false;
+    let currentTrap = null;
+    let woundsList = [];
+
+    const gridContainer = document.getElementById("sigilGrid");
+    const seqDisplaySpan = document.getElementById("seqDisplay");
+    const statusDiv = document.getElementById("statusMessage");
+    const resetBtn = document.getElementById("resetBtn");
+    const dynamicZone = document.getElementById("dynamicZone");
+    const woundZone = document.getElementById("woundZone");
+    const woundListDiv = document.getElementById("woundList");
+
+    function getNameById(id) {
+        const found = symbols.find(s => s.id === id);
+        return found ? found.label : id;
+    }
+
+    function updateDisplay() {
+        if (pressedIds.length === 0) seqDisplaySpan.innerText = "—";
+        else seqDisplaySpan.innerText = pressedIds.map(id => getNameById(id)).join(" → ");
+    }
+
+    function updateWoundDisplay() {
+        if (woundsList.length > 0) {
+            woundZone.style.display = "block";
+            woundListDiv.innerHTML = woundsList.map(w => `<div class="wound-item">${w}</div>`).join("");
+        } else woundZone.style.display = "none";
+    }
+
+    function addRandomWound() {
+        const available = wounds.filter(w => !woundsList.includes(w));
+        const newWound = available.length ? available[Math.floor(Math.random() * available.length)] : wounds[Math.floor(Math.random() * wounds.length)];
+        woundsList.push(newWound);
+        return newWound;
+    }
+
+    function lockAllButtons(lock) {
+        document.querySelectorAll(".sigil").forEach(btn => lock ? btn.classList.add("disabled") : btn.classList.remove("disabled"));
+    }
+
+    function getRandomTrap() {
+        return { ...traps[Math.floor(Math.random() * traps.length)] };
+    }
+
+    function activateTrap() {
+        trapActive = true;
+        waitingForDice = true;
+        currentTrap = getRandomTrap();
+        lockAllButtons(true);
+        statusDiv.innerHTML = `⚠️ ЛОВУШКА: ${currentTrap.name} ⚠️<br>${currentTrap.description}`;
+        statusDiv.classList.add("danger-text");
+        dynamicZone.innerHTML = `
+            <div class="trap-panel">
+                <span style="font-size:1.3rem;">🏺 ${currentTrap.name} 🏺</span>
+                <p style="margin:12px 0;">${currentTrap.description}</p>
+                <button class="dice-btn" id="rollDiceBtn">🎲 КИНУТЬ d20 🎲</button>
+            </div>
+        `;
+        document.getElementById("rollDiceBtn")?.addEventListener("click", rollD20Handler);
+    }
+
+    function rollD20Handler() {
+        if (!waitingForDice) return;
+        const roll = Math.floor(Math.random() * 20) + 1;
+        const success = roll >= currentTrap.threshold;
+        if (success) {
+            statusDiv.innerHTML = `✨ УДАЧА! ${roll}. ${currentTrap.successText} Ты выжил. ✨`;
+            statusDiv.classList.remove("danger-text");
+        } else {
+            const newWound = addRandomWound();
+            updateWoundDisplay();
+            statusDiv.innerHTML = `💢 ПРОВАЛ! ${roll}. ${currentTrap.failText}<br>🔻 РАНЕНИЕ: ${newWound} 🔻`;
+            statusDiv.classList.add("danger-text");
+        }
+        trapActive = false;
+        waitingForDice = false;
+        dynamicZone.innerHTML = "";
+        lockAllButtons(false);
+        statusDiv.innerHTML = success ? "❖ Ловушка позади. Продолжай путь." : `❖ Ты жив, но ${newWound.toLowerCase()}. Двигайся дальше.`;
+    }
+
+    function fullReset() {
+        if (trapActive || waitingForDice) {
+            statusDiv.innerHTML = "❖ Сначала заверши ловушку.";
+            return;
+        }
+        currentStep = 0;
+        pressedIds = [];
+        mistakeCounter = 0;
+        woundsList = [];
+        gameFinished = false;
+        updateDisplay();
+        updateWoundDisplay();
+        statusDiv.innerHTML = "❖ Врата очищены. Начни испытание заново.";
+        statusDiv.classList.remove("danger-text");
+        dynamicZone.innerHTML = "";
+        lockAllButtons(false);
+        renderGrid();
+    }
+
+    function handleMistake(wrongLabel) {
+        if (gameFinished || trapActive || waitingForDice) return;
+        mistakeCounter++;
+        if (mistakeCounter === 1) {
+            statusDiv.innerHTML = `❌ Ошибка! «${wrongLabel}» нарушает порядок. ❌`;
+            statusDiv.style.color = "#c97e5a";
+        } else if (mistakeCounter >= 2) {
+            statusDiv.innerHTML = `❌ Ошибка! «${wrongLabel}» пробуждает ловушку! ❌`;
+            activateTrap();
+            mistakeCounter = 0;
+        }
+    }
+
+    function handleSuccess(label, id) {
+        pressedIds.push(id);
+        currentStep++;
+        updateDisplay();
+        if (currentStep === correctSequence.length) {
+            winGame();
+            return;
+        }
+        statusDiv.innerHTML = `✓ Верно: ${label}. Осталось ${correctSequence.length - currentStep} ликов.`;
+        statusDiv.style.color = "#b5c68a";
+        const btn = document.querySelector(`.sigil[data-id="${id}"]`);
+        if (btn) { btn.style.transform = "scale(0.95)"; setTimeout(() => btn.style.transform = "", 120); }
+    }
+
+    function winGame() {
+        gameFinished = true;
+        lockAllButtons(true);
+        let woundMsg = woundsList.length ? `<br><br>🏆 Ты выстоял, получив ${woundsList.length} ранение(й):<br>${woundsList.map(w => `• ${w}`).join("<br>")}` : "<br><br>✨ Ты прошёл испытание без единой царапины! Истинный герой! ✨";
+        statusDiv.innerHTML = `✨ ДЕВЯТЬ ЛИКОВ ПРИЗНАЛИ ВАС! ✨<br>Врата открываются.${woundMsg}`;
+        statusDiv.style.color = "#f7e6b0";
+        dynamicZone.innerHTML = `<div class="victory-message"><strong style="color:#eace8a;">🏆 ВРАТА ОТКРЫТЫ 🏆</strong><br>Ты доказал свою стойкость перед ликами древних.</div>`;
+    }
+
+    function handlePress(id, label) {
+        if (gameFinished) return;
+        if (trapActive || waitingForDice) {
+            statusDiv.innerHTML = "⚠️ Ловушка активна! Сначала брось d20.";
+            return;
+        }
+        if (id !== correctSequence[currentStep]) handleMistake(label);
+        else handleSuccess(label, id);
+    }
+
+    function renderGrid() {
+        gridContainer.innerHTML = "";
+        symbols.forEach(sym => {
+            const btn = document.createElement("div");
+            btn.className = "sigil";
+            if (gameFinished || trapActive || waitingForDice) btn.classList.add("disabled");
+            btn.setAttribute("data-id", sym.id);
+            btn.innerHTML = `${sym.svg}<span class="sigil-label">${sym.label}</span>`;
+            btn.addEventListener("click", () => handlePress(sym.id, sym.label));
+            gridContainer.appendChild(btn);
+        });
+    }
+
+    function init() {
+        renderGrid();
+        resetBtn.addEventListener("click", fullReset);
+        currentStep = 0; pressedIds = []; mistakeCounter = 0; gameFinished = false; trapActive = false; waitingForDice = false; woundsList = [];
+        updateDisplay(); updateWoundDisplay(); statusDiv.innerHTML = "❖ Врата замерли. Коснись девяти ликов в древнем порядке.";
+    }
+    init();
+</script>
+</body>
+</html>
